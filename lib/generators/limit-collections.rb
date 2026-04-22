@@ -30,6 +30,16 @@ module Jekyll
       limits.each do |collection_name, limit|
         # Skip the 'randomize' option itself
         next if collection_name == 'randomize'
+
+        limit_sort = 'ascending'
+
+        if limit.is_a?(Hash)
+            if limit['sort'] == 'descending'
+                limit_sort = 'descending'
+            end
+            limit = limit['count']
+        end
+
         next unless limit.is_a?(Integer) && limit > 0
 
         collection = site.collections[collection_name]
@@ -47,10 +57,13 @@ module Jekyll
           Jekyll.logger.info "LimitCollections:", "Limited '#{collection_name}' from #{original_count} to #{limit} documents (random sample)"
         else
           # Take first N documents in order
-          collection.docs.replace(collection.docs.first(limit))
+          collection_docs_method = limit_sort === "ascending" ? :first : :last
+
+          collection.docs.replace(collection.docs.send(collection_docs_method, limit))
           Jekyll.logger.info "LimitCollections:", "Limited '#{collection_name}' from #{original_count} to #{limit} documents"
         end
       end
     end
   end
 end
+
