@@ -14,7 +14,7 @@ module Jekyll
   # Load Hooks
   require_relative "hooks/inject-properties"
   require_relative "hooks/markdown-images"
-  # require_relative "hooks/parallel-build"
+  require_relative "hooks/parallel-build"
 
   # Load Tags
   require_relative "tags/external"
