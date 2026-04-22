@@ -27,9 +27,27 @@ module Jekyll
       # Check if randomization is disabled (default: true)
       randomize = limits.fetch('randomize', true)
 
+      sort_ascending = 'ascending'
+      sort_descending = 'descending'
+
+      sort = limits.fetch('sort', sort_ascending)
+      return unless sort.is_a?(String)
+      sort.downcase!
+      
+      return unless [sort_ascending, sort_descending].include?(sort)
+
       limits.each do |collection_name, limit|
         # Skip the 'randomize' option itself
         next if collection_name == 'randomize'
+        next if collection_name == 'sort' 
+
+        if limit.is_a?(Hash)
+            if limit['sort'] == sort_descending
+                limit_sort = sort_descending
+            end
+            limit = limit['count']
+        end
+
         next unless limit.is_a?(Integer) && limit > 0
 
         collection = site.collections[collection_name]
@@ -47,10 +65,13 @@ module Jekyll
           Jekyll.logger.info "LimitCollections:", "Limited '#{collection_name}' from #{original_count} to #{limit} documents (random sample)"
         else
           # Take first N documents in order
-          collection.docs.replace(collection.docs.first(limit))
-          Jekyll.logger.info "LimitCollections:", "Limited '#{collection_name}' from #{original_count} to #{limit} documents"
+          collection_docs_method = sort == sort_ascending ? :first : :last
+
+          collection.docs.replace(collection.docs.send(collection_docs_method, limit))
+          Jekyll.logger.info "LimitCollections:", "Limited '#{collection_name}' from #{original_count} to #{limit} documents (sort: #{sort})"
         end
       end
     end
   end
 end
+
